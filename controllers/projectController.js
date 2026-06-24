@@ -18,17 +18,31 @@ const createProject = async (req, res) => {
   }
 };
 
-// Get all projects for the logged in user
+// Get all projects with search and filters
 const getProjects = async (req, res) => {
   try {
-    const projects = await Project.find({
+    const filter = {
       $or: [
         { owner: req.user._id },
         { 'collaborators.user': req.user._id }
       ]
-    }).populate('owner', 'name email');
+    };
 
-    res.status(200).json({ projects });
+    // Filter by status
+    if (req.query.status) {
+      filter.status = req.query.status;
+    }
+
+    // Search by name
+    if (req.query.search) {
+      filter.name = { $regex: req.query.search, $options: 'i' };
+    }
+
+    const projects = await Project.find(filter)
+      .populate('owner', 'name email')
+      .sort({ createdAt: -1 });
+
+    res.status(200).json({ count: projects.length, projects });
 
   } catch (err) {
     res.status(500).json({ message: 'Server error', error: err.message });
