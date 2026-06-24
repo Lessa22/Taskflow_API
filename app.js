@@ -5,6 +5,7 @@ require('dotenv').config();
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const taskRoutes = require('./routes/tasks');
+const collaboratorRoutes = require('./routes/collaborators');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json());
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/projects/:projectId/tasks', taskRoutes);
+app.use('/api/projects/:id/collaborators', collaboratorRoutes);
 
 app.get('/', (req, res) => {
   res.json({ message: 'TaskFlow API is running!' });
