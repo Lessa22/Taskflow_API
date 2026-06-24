@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow API Tester</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #0f0f1a;
+      color: #e0e0e0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      background: #16162a;
+      border-right: 1px solid #2a2a4a;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .sidebar-header {
+      padding: 20px;
+      border-bottom: 1px solid #2a2a4a;
+    }
+
+    .sidebar-header h1 {
+      font-size: 18px;
+      color: #7c6af7;
+      font-weight: 700;
+    }
+
+    .sidebar-header p {
+      font-size: 11px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .token-box {
+      padding: 12px 16px;
+      background: #1e1e38;
+      border-bottom: 1px solid #2a2a4a;
+    }
+
+    .token-box label {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .token-display {
+      font-size: 10px;
+      color: #4ade80;
+      margin-top: 4px;
+      word-break: break-all;
+      max-height: 40px;
+      overflow: hidden;
+    }
+
+    .token-display.empty { color: #ef4444; }
+
+    .section-title {
+      padding: 12px 16px 6px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #555;
+    }
+
+    .endpoint-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 9px 16px;
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      color: #ccc;
+      width: 100%;
+      text-align: left;
+      font-size: 13px;
+      transition: background 0.2s;
+    }
+
+    .endpoint-btn:hover { background: #1e1e38; color: #fff; }
+    .endpoint-btn.active { background: #2a2a4a; color: #fff; }
+
+    .method {
+      font-size: 9px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 3px;
+      min-width: 38px;
+      text-align: center;
+    }
+
+    .GET { background: #1a4a2e; color: #4ade80; }
+    .POST { background: #1a3a5c; color: #60a5fa; }
+    .PUT { background: #4a3a1a; color: #fbbf24; }
+    .DELETE { background: #4a1a1a; color: #f87171; }
+
+    /* Main content */
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .request-panel {
+      padding: 24px;
+      border-bottom: 1px solid #2a2a4a;
+      background: #12121f;
+    }
+
+    .request-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .url-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .method-badge {
+      padding: 8px 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      border: none;
+    }
+
+    .url-input {
+      flex: 1;
+      padding: 8px 14px;
+      background: #1e1e38;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+    }
+
+    .send-btn {
+      padding: 8px 20px;
+      background: #7c6af7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+
+    .send-btn:hover { background: #6a56e8; }
+    .send-btn:disabled { background: #444; cursor: not-allowed; }
+
+    .body-section label {
+      font-size: 11px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      display: block;
+      margin-bottom: 8px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 100px;
+      background: #1e1e38;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      color: #e0e0e0;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      resize: vertical;
+    }
+
+    /* Response panel */
+    .response-panel {
+      flex: 1;
+      padding: 20px 24px;
+      overflow-y: auto;
+    }
+
+    .response-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .response-title {
+      font-size: 13px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .status-badge {
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .status-2xx { background: #1a4a2e; color: #4ade80; }
+    .status-4xx { background: #4a1a1a; color: #f87171; }
+    .status-5xx { background: #4a1a1a; color: #f87171; }
+
+    .response-body {
+      background: #1e1e38;
+      border: 1px solid #2a2a4a;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      white-space: pre-wrap;
+      word-break: break-all;
+      min-height: 100px;
+      color: #a0e0a0;
+    }
+
+    .loading { color: #7c6af7; animation: pulse 1s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #444;
+    }
+
+    .empty-state p { font-size: 14px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-header">
+    <h1>⚡ TaskFlow</h1>
+    <p>API Tester</p>
+  </div>
+
+  <div class="token-box">
+    <label>JWT Token</label>
+    <div class="token-display empty" id="tokenDisplay">Aucun token — connecte-toi d'abord</div>
+  </div>
+
+  <div class="section-title">Auth</div>
+  <button class="endpoint-btn" onclick="loadEndpoint('POST', '/api/auth/register', '{&quot;name&quot;: &quot;Lucky&quot;, &quot;email&quot;: &quot;lucky@test.com&quot;, &quot;password&quot;: &quot;123456&quot;}', 'Register')">
+    <span class="method POST">POST</span> Register
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('POST', '/api/auth/login', '{&quot;email&quot;: &quot;lucky@test.com&quot;, &quot;password&quot;: &quot;123456&quot;}', 'Login')">
+    <span class="method POST">POST</span> Login
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('GET', '/api/auth/me', '', 'Mon profil')">
+    <span class="method GET">GET</span> Mon profil
+  </button>
+
+  <div class="section-title">Projects</div>
+  <button class="endpoint-btn" onclick="loadEndpoint('POST', '/api/projects', '{&quot;name&quot;: &quot;Mon Projet&quot;, &quot;description&quot;: &quot;Description ici&quot;}', 'Créer un projet')">
+    <span class="method POST">POST</span> Créer
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('GET', '/api/projects', '', 'Tous les projets')">
+    <span class="method GET">GET</span> Tous les projets
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('GET', '/api/projects?status=active', '', 'Projets actifs')">
+    <span class="method GET">GET</span> Filtre par status
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('GET', '/api/projects?search=mon', '', 'Recherche projets')">
+    <span class="method GET">GET</span> Recherche
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('GET', '/api/projects/ID_ICI', '', 'Un projet')">
+    <span class="method GET">GET</span> Un projet
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('PUT', '/api/projects/ID_ICI', '{&quot;name&quot;: &quot;Nom modifié&quot;, &quot;status&quot;: &quot;completed&quot;}', 'Modifier projet')">
+    <span class="method PUT">PUT</span> Modifier
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('DELETE', '/api/projects/ID_ICI', '', 'Supprimer projet')">
+    <span class="method DELETE">DEL</span> Supprimer
+  </button>
+
+  <div class="section-title">Tasks</div>
+  <button class="endpoint-btn" onclick="loadEndpoint('POST', '/api/projects/PROJECT_ID/tasks', '{&quot;title&quot;: &quot;Ma tâche&quot;, &quot;priority&quot;: &quot;high&quot;, &quot;dueDate&quot;: &quot;2026-12-31&quot;}', 'Créer tâche')">
+    <span class="method POST">POST</span> Créer
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('GET', '/api/projects/PROJECT_ID/tasks', '', 'Toutes les tâches')">
+    <span class="method GET">GET</span> Toutes les tâches
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('GET', '/api/projects/PROJECT_ID/tasks?status=todo', '', 'Tâches todo')">
+    <span class="method GET">GET</span> Filtre par status
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('PUT', '/api/projects/PROJECT_ID/tasks/TASK_ID', '{&quot;status&quot;: &quot;in_progress&quot;}', 'Modifier tâche')">
+    <span class="method PUT">PUT</span> Modifier
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('DELETE', '/api/projects/PROJECT_ID/tasks/TASK_ID', '', 'Supprimer tâche')">
+    <span class="method DELETE">DEL</span> Supprimer
+  </button>
+
+  <div class="section-title">Collaborators</div>
+  <button class="endpoint-btn" onclick="loadEndpoint('POST', '/api/projects/ID_ICI/collaborators', '{&quot;email&quot;: &quot;bob@test.com&quot;, &quot;role&quot;: &quot;editor&quot;}', 'Ajouter collaborateur')">
+    <span class="method POST">POST</span> Ajouter
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('PUT', '/api/projects/ID_ICI/collaborators/USER_ID', '{&quot;role&quot;: &quot;viewer&quot;}', 'Changer rôle')">
+    <span class="method PUT">PUT</span> Changer rôle
+  </button>
+  <button class="endpoint-btn" onclick="loadEndpoint('DELETE', '/api/projects/ID_ICI/collaborators/USER_ID', '', 'Retirer collaborateur')">
+    <span class="method DELETE">DEL</span> Retirer
+  </button>
+
+  <div class="section-title">Dashboard</div>
+  <button class="endpoint-btn" onclick="loadEndpoint('GET', '/api/dashboard', '', 'Statistiques')">
+    <span class="method GET">GET</span> Statistiques
+  </button>
+</div>
+
+<div class="main">
+  <div class="request-panel">
+    <div class="request-title" id="requestTitle">Sélectionne un endpoint</div>
+    <div class="url-bar">
+      <span class="method-badge GET" id="methodBadge">GET</span>
+      <input class="url-input" id="urlInput" value="http://localhost:3000/api/auth/login" />
+      <button class="send-btn" id="sendBtn" onclick="sendRequest()">Envoyer ▶</button>
+    </div>
+    <div class="body-section">
+      <label>Body (JSON)</label>
+      <textarea id="bodyInput" placeholder='{ "email": "lucky@test.com", "password": "123456" }'></textarea>
+    </div>
+  </div>
+
+  <div class="response-panel">
+    <div class="response-header">
+      <span class="response-title">Réponse</span>
+      <span class="status-badge" id="statusBadge" style="display:none"></span>
+    </div>
+    <div class="response-body" id="responseBody">
+      <div class="empty-state">
+        <div style="font-size:32px">⚡</div>
+        <p>Clique sur un endpoint à gauche pour commencer</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let currentMethod = 'GET';
+  let token = localStorage.getItem('taskflow_token') || '';
+
+  if (token) {
+    document.getElementById('tokenDisplay').textContent = token.substring(0, 50) + '...';
+    document.getElementById('tokenDisplay').classList.remove('empty');
+  }
+
+  function loadEndpoint(method, url, body, title) {
+    currentMethod = method;
+    document.getElementById('requestTitle').textContent = title;
+    document.getElementById('urlInput').value = 'http://localhost:3000' + url;
+    document.getElementById('bodyInput').value = body ? JSON.parse('"' + body + '"') : '';
+
+    const badge = document.getElementById('methodBadge');
+    badge.textContent = method;
+    badge.className = 'method-badge ' + method;
+
+    document.querySelectorAll('.endpoint-btn').forEach(b => b.classList.remove('active'));
+    event.currentTarget.classList.add('active');
+  }
+
+  async function sendRequest() {
+    const url = document.getElementById('urlInput').value;
+    const bodyText = document.getElementById('bodyInput').value.trim();
+    const btn = document.getElementById('sendBtn');
+    const responseEl = document.getElementById('responseBody');
+    const statusEl = document.getElementById('statusBadge');
+
+    btn.disabled = true;
+    btn.textContent = 'Envoi...';
+    responseEl.innerHTML = '<span class="loading">Envoi en cours...</span>';
+    statusEl.style.display = 'none';
+
+    const options = {
+      method: currentMethod,
+      headers: { 'Content-Type': 'application/json' }
+    };
+
+    if (token) {
+      options.headers['Authorization'] = 'Bearer ' + token;
+    }
+
+    if (bodyText && currentMethod !== 'GET') {
+      try {
+        options.body = JSON.stringify(JSON.parse(bodyText));
+      } catch (e) {
+        responseEl.textContent = '❌ JSON invalide dans le body';
+        btn.disabled = false;
+        btn.textContent = 'Envoyer ▶';
+        return;
+      }
+    }
+
+    try {
+      const res = await fetch(url, options);
+      const data = await res.json();
+
+      // Save token automatically after login or register
+      if (data.token) {
+        token = data.token;
+        localStorage.setItem('taskflow_token', token);
+        const display = document.getElementById('tokenDisplay');
+        display.textContent = token.substring(0, 50) + '...';
+        display.classList.remove('empty');
+      }
+
+      const statusCode = res.status;
+      statusEl.style.display = 'inline';
+      statusEl.textContent = statusCode;
+      statusEl.className = 'status-badge ' + (statusCode < 300 ? 'status-2xx' : statusCode < 500 ? 'status-4xx' : 'status-5xx');
+
+      responseEl.textContent = JSON.stringify(data, null, 2);
+
+    } catch (err) {
+      responseEl.textContent = '❌ Erreur : ' + err.message + '\n\nVérifie que le serveur tourne sur le port 3000.';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Envoyer ▶';
+  }
+</script>
+
+</body>
+</html>

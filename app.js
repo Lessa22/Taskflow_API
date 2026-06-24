@@ -12,6 +12,8 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
+// Serve the test interface
+app.use(express.static('public'));
 
 // Routes
 app.use('/api/auth', authRoutes);
